@@ -1006,7 +1006,7 @@ function configurarSimuladorPaso4(exp) {
             <button class="btn btn-neon" onclick="ejecutarEnsayoSimulado('Medición Sensorial')">🚀 Registrar Lectura</button>
         `;
     }
-}
+
 function actualizarVarFuerza(val) {
     simVars.fuerza = parseFloat(val);
     const tag = document.getElementById("val-ctrl-fuerza");
