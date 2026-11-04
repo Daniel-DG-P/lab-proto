@@ -1060,6 +1060,7 @@ function arrancarCanvas(canvasId, tipo, esDemo) {
         t += 0.04;
 
         if (tipo === "fuerza" || tipo === "choque") {
+            // Animación del carrito y fricción
             ctx.strokeStyle = "#1e293b";
             ctx.lineWidth = 3;
             ctx.beginPath();
@@ -1086,6 +1087,7 @@ function arrancarCanvas(canvasId, tipo, esDemo) {
             ctx.fill();
 
         } else if (tipo === "ph") {
+            // Animación del vaso y colorimetría de pH
             const cx = canvas.width / 2;
             const cy = canvas.height / 2;
             const col = simVars.param1 < 6 ? "#ef4444" : simVars.param1 > 8 ? "#a855f7" : "#10b981";
@@ -1100,7 +1102,43 @@ function arrancarCanvas(canvasId, tipo, esDemo) {
             ctx.lineWidth = 4;
             ctx.strokeRect(cx - 55, cy - 30, 110, 115);
 
+        } else if (tipo === "pendulo") {
+            // === ANIMACIÓN CORREGIDA DEL PÉNDULO FÍSICO ===
+            const cx = canvas.width / 2; // Centro horizontal
+            const cy = 30;               // Punto de pivote superior
+            const longitudCuerda = 120;  // Longitud de la cuerda
+            
+            // Ángulo oscilatorio basado en función seno (movimiento armónico simple)
+            const anguloMaximo = Math.PI / 4; // 45 grados de apertura
+            const angulo = anguloMaximo * Math.sin(t);
+
+            // Coordenadas cartesianas de la esfera del péndulo
+            const xEsfera = cx + longitudCuerda * Math.sin(angulo);
+            const yEsfera = cy + longitudCuerda * Math.cos(angulo);
+
+            // Dibujar soporte / pivote superior
+            ctx.fillStyle = "#94a3b8";
+            ctx.fillRect(cx - 20, cy - 10, 40, 8);
+
+            // Dibujar la cuerda del péndulo
+            ctx.strokeStyle = "#38bdf8";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(xEsfera, yEsfera);
+            ctx.stroke();
+
+            // Dibujar la esfera (masa) con efecto de brillo neón
+            ctx.fillStyle = "#a855f7";
+            ctx.shadowColor = "#a855f7";
+            ctx.shadowBlur = 15;
+            ctx.beginPath();
+            ctx.arc(xEsfera, yEsfera, 16, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0; // Limpiar sombra
+
         } else {
+            // Animación por defecto (Ondas genéricas)
             ctx.strokeStyle = "#a855f7";
             ctx.lineWidth = 3;
             ctx.shadowColor = "#a855f7";
