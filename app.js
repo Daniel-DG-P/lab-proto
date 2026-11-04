@@ -22,7 +22,37 @@ let userSession = {
     conclusionTexto: "",
     comunicacionTitular: ""
 };
+/* GESTIÓN DE TEMA OSCURO / CLARO */
+function toggleTheme() {
+    const body = document.documentElement;
+    const currentTheme = body.getAttribute("data-theme");
+    const btnTheme = document.getElementById("btn-theme");
 
+    if (currentTheme === "light") {
+        body.setAttribute("data-theme", "dark");
+        localStorage.setItem("nexora_theme", "dark");
+        if (btnTheme) btnTheme.innerText = "🌙";
+    } else {
+        body.setAttribute("data-theme", "light");
+        localStorage.setItem("nexora_theme", "light");
+        if (btnTheme) btnTheme.innerText = "☀️";
+    }
+}
+
+function cargarTemaGuardado() {
+    const savedTheme = localStorage.getItem("nexora_theme") || "dark";
+    const btnTheme = document.getElementById("btn-theme");
+    document.documentElement.setAttribute("data-theme", savedTheme);
+    if (btnTheme) {
+        btnTheme.innerText = savedTheme === "light" ? "☀️" : "🌙";
+    }
+}
+
+/* MODIFICACIÓN EN EL EVENTO CARGA INICIAL DE LA APP */
+window.onload = () => {
+    cargarTemaGuardado();
+    syncRed();
+};
 /* BASE DE DATOS DE 18 EXPERIMENTOS (3 POR MATERIA / NIVEL) */
 const dbExperimentos = {
     Secundaria: {

@@ -21,6 +21,8 @@
             </div>
             <div class="header-status">
                 <div id="estado-red" class="pill offline">🔴 Sin Conexión (IA Local)</div>
+                <!-- BOTÓN MODO OSCURO / CLARO -->
+                <button id="btn-theme" class="btn-config" onclick="toggleTheme()" title="Cambiar Tema">🌙</button>
                 <button class="btn-config" onclick="toggleModalConfig()" title="Configuración de IA">⚙️</button>
             </div>
         </header>
@@ -86,7 +88,7 @@
                 </button>
             </div>
 
-            <h3 style="margin: 20px 0 10px; font-size: 1rem; color: #94a3b8;">SELECCIONA UN EXPERIMENTO:</h3>
+            <h3 style="margin: 20px 0 10px; font-size: 1rem; color: var(--text-muted);">SELECCIONA UN EXPERIMENTO:</h3>
             <div id="lista-temas" class="experiments-grid"></div>
         </section>
 
@@ -229,7 +231,7 @@
                                 </tr>
                             </thead>
                             <tbody id="tabla-registros">
-                                <tr><td colspan="4" style="text-align:center; color:#64748b;">Aún no has hecho ensayos. ¡Ve al Paso 4 y presiona Ejecutar!</td></tr>
+                                <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Aún no has hecho ensayos. ¡Ve al Paso 4 y presiona Ejecutar!</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -253,7 +255,7 @@
                     </div>
 
                     <div class="hipotesis-reminder">
-                        <span style="font-size: 0.8rem; text-transform: uppercase; color:#38bdf8;">Recordatorio de tu Hipótesis:</span>
+                        <span style="font-size: 0.8rem; text-transform: uppercase; color:var(--neon-blue);">Recordatorio de tu Hipótesis:</span>
                         <div id="txt-recordatorio-hip" style="font-weight: 600; margin-top:4px;">"..."</div>
                     </div>
 
