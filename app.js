@@ -947,15 +947,28 @@ function configurarSimuladorPaso4(exp) {
     contenedor.innerHTML = "";
     document.getElementById("tabla-registros").innerHTML = `<tr><td colspan="4" style="text-align:center; color:#64748b;">Aún no has hecho ensayos. ¡Presiona los botones para registrar datos!</td></tr>`;
 
-    if (exp.simTipo === "fuerza" || exp.simTipo === "choque") {
-        simVars.param1 = 35; // Valor inicial por defecto
+    if (exp.simTipo === "fuerza" || exp.simTipo === "choque" || exp.simTipo === "newton") {
+        simVars.fuerza = 14; // Fuerza inicial en Newtons (N)
+        simVars.masa = 2.0;  // Masa inicial en Kilogramos (kg)
+
         contenedor.innerHTML = `
-            <div class="control-item">
-                <div class="control-header"><span>Fuerza / Impulso: <b id="val-ctrl1">35</b>N</span></div>
-                <input type="range" class="slider" min="5" max="100" value="35" oninput="actualizarSlider(1, this.value, 'N')">
+            <div class="control-item" style="margin-bottom: 12px;">
+                <div class="control-header" style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span>Fuerza Aplicada: <b id="val-ctrl-fuerza">14</b> N</span>
+                </div>
+                <input type="range" class="slider" min="5" max="80" value="14" oninput="actualizarVarFuerza(this.value)">
             </div>
-            <button class="btn btn-neon" onclick="ejecutarEnsayoSimulado('Impulso Aplicado')">⚡ Aplicar Fuerza y Medir</button>
+
+            <div class="control-item" style="margin-bottom: 15px;">
+                <div class="control-header" style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span>Masa del Carro: <b id="val-ctrl-masa">2.0</b> kg</span>
+                </div>
+                <input type="range" class="slider" min="0.5" max="5.0" step="0.5" value="2.0" oninput="actualizarVarMasa(this.value)">
+            </div>
+
+            <button class="btn btn-neon" style="background:#10b981; color:#fff;" onclick="lanzarPruebaNewton()">▶ Aplicar Impulso y Medir</button>
         `;
+    }
     } else if (exp.simTipo === "ph") {
         contenedor.innerHTML = `
             <div class="btn-duo" style="margin-top:0;">
@@ -994,7 +1007,36 @@ function configurarSimuladorPaso4(exp) {
         `;
     }
 }
+function actualizarVarFuerza(val) {
+    simVars.fuerza = parseFloat(val);
+    const tag = document.getElementById("val-ctrl-fuerza");
+    if (tag) tag.innerText = val;
+}
 
+function actualizarVarMasa(val) {
+    simVars.masa = parseFloat(val);
+    const tag = document.getElementById("val-ctrl-masa");
+    if (tag) tag.innerText = parseFloat(val).toFixed(1);
+}
+
+function lanzarPruebaNewton() {
+    const fuerza = simVars.fuerza || 14;
+    const masa = simVars.masa || 2.0;
+    
+    // Ley de Newton: Aceleración = Fuerza / Masa
+    const aceleracion = (fuerza / masa).toFixed(2);
+
+    // Activa el impulso en la animación del canvas
+    simVars.impulsoActivo = true;
+    simVars.velocidadAcc = parseFloat(aceleracion);
+
+    // Registra el ensayo numérico en la tabla de datos del Paso 5
+    registrarFilaTabla(
+        `F = ${fuerza} N, m = ${masa} kg`, 
+        `Aceleración = ${aceleracion} m/s²`, 
+        "Completado"
+    );
+}
 function actualizarSlider(num, val, unit) {
     simVars.param1 = parseFloat(val);
     const tag = document.getElementById(`val-ctrl${num}`);
@@ -1071,7 +1113,7 @@ function arrancarCanvas(canvasId, tipo, esDemo) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         t += 0.04;
 
-        if (tipo === "fuerza" || tipo === "choque") {
+        if (tipo === "fuerza" || tipo === "choque" || tipo === "newton") {
             ctx.strokeStyle = "#1e293b";
             ctx.lineWidth = 3;
             ctx.beginPath();
@@ -1082,21 +1124,18 @@ function arrancarCanvas(canvasId, tipo, esDemo) {
             if (esDemo) {
                 xPos = 120 + Math.sin(t * 2) * 80;
             } else {
-                // Definimos un umbral de fricción estática (ej. 25 N)
-                const fuerzaFriccion = 25;
-                const fuerzaActual = simVars.param1 !== undefined ? simVars.param1 : 35;
+                // Si el usuario presionó el botón de impulso, usamos la aceleración real (F / m)
+                if (simVars.impulsoActivo) {
+                    velocidadActual = simVars.velocidadAcc || 2.0;
+                    xPos += velocidadActual * 0.8;
 
-                if (fuerzaActual <= fuerzaFriccion) {
-                    // Si la fuerza es menor o igual a la fricción, el carro SE QUEDA ESTÁTICO
-                    velocidadActual = 0;
+                    if (xPos > canvas.width - 70) {
+                        xPos = 40; // Reinicia al llegar al final de la pista
+                        simVars.impulsoActivo = false;
+                    }
                 } else {
-                    // Si supera la fricción, acelera proporcionalmente a la fuerza restante
-                    velocidadActual = (fuerzaActual - fuerzaFriccion) * 0.1;
-                }
-
-                xPos += velocidadActual;
-                if (xPos > canvas.width - 70) {
-                    xPos = 40; // Reinicia al llegar al final
+                    // Si no se ha aplicado impulso, el carro permanece estático en la salida
+                    velocidadActual = 0;
                 }
 
                 if (sensorActivo) {
@@ -1104,7 +1143,7 @@ function arrancarCanvas(canvasId, tipo, esDemo) {
                 }
             }
 
-            // Dibujar el carro
+            // Dibujar el carrito
             ctx.fillStyle = "#00e5ff";
             ctx.shadowColor = "#00e5ff";
             ctx.shadowBlur = 10;
