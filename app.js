@@ -948,10 +948,11 @@ function configurarSimuladorPaso4(exp) {
     document.getElementById("tabla-registros").innerHTML = `<tr><td colspan="4" style="text-align:center; color:#64748b;">Aún no has hecho ensayos. ¡Presiona los botones para registrar datos!</td></tr>`;
 
     if (exp.simTipo === "fuerza" || exp.simTipo === "choque") {
+        simVars.param1 = 35; // Valor inicial por defecto
         contenedor.innerHTML = `
             <div class="control-item">
-                <div class="control-header"><span>Fuerza / Impulso: <b id="val-ctrl1">35</b> N</span></div>
-                <input type="range" class="slider" min="5" max="100" value="35" oninput="actualizarSlider(1, this.value, ' N')">
+                <div class="control-header"><span>Fuerza / Impulso: <b id="val-ctrl1">35</b>N</span></div>
+                <input type="range" class="slider" min="5" max="100" value="35" oninput="actualizarSlider(1, this.value, 'N')">
             </div>
             <button class="btn btn-neon" onclick="ejecutarEnsayoSimulado('Impulso Aplicado')">⚡ Aplicar Fuerza y Medir</button>
         `;
@@ -1080,7 +1081,18 @@ function arrancarCanvas(canvasId, tipo, esDemo) {
             if (esDemo) {
                 xPos = 120 + Math.sin(t * 2) * 80;
             } else {
-                xPos = (xPos + 2 + (sensorActivo ? sensorTilt * 2 : 0)) % (canvas.width - 70);
+                // Vinculamos la velocidad directamente a los Newtons del slider (simVars.param1)
+                const fuerzaActual = simVars.param1 !== undefined ? simVars.param1 : 35;
+                const velocidad = fuerzaActual * 0.12;
+
+                xPos += velocidad;
+                if (xPos > canvas.width - 70) {
+                    xPos = 40; // Reinicia la posición al llegar al final para la prueba visual
+                }
+
+                if (sensorActivo) {
+                    xPos += sensorTilt * 2;
+                }
             }
 
             ctx.fillStyle = "#00e5ff";
@@ -1111,12 +1123,10 @@ function arrancarCanvas(canvasId, tipo, esDemo) {
             ctx.strokeRect(cx - 55, cy - 30, 110, 115);
 
         } else if (tipo === "pendulo") {
-            // === PÉNDULO ACOPLADO AL SLIDER (simVars.param1) ===
             const cx = canvas.width / 2;
             const cy = 30;
             const longitudCuerda = 120;
 
-            // Tomamos el valor de la barra deslizante como grados de amplitud (por defecto 45°)
             const gradosAmplitud = simVars.param1 !== undefined ? simVars.param1 : 45;
             const anguloMaximo = (gradosAmplitud * Math.PI) / 180;
             const angulo = anguloMaximo * Math.sin(t);
@@ -1124,11 +1134,9 @@ function arrancarCanvas(canvasId, tipo, esDemo) {
             const xEsfera = cx + longitudCuerda * Math.sin(angulo);
             const yEsfera = cy + longitudCuerda * Math.cos(angulo);
 
-            // Soporte superior
             ctx.fillStyle = "#94a3b8";
             ctx.fillRect(cx - 20, cy - 10, 40, 8);
 
-            // Cuerda
             ctx.strokeStyle = "#38bdf8";
             ctx.lineWidth = 3;
             ctx.beginPath();
@@ -1136,7 +1144,6 @@ function arrancarCanvas(canvasId, tipo, esDemo) {
             ctx.lineTo(xEsfera, yEsfera);
             ctx.stroke();
 
-            // Esfera con efecto neón
             ctx.fillStyle = "#a855f7";
             ctx.shadowColor = "#a855f7";
             ctx.shadowBlur = 15;
@@ -1164,7 +1171,6 @@ function arrancarCanvas(canvasId, tipo, esDemo) {
     }
     render();
 }
-
 /* HARDWARE / SENSORES */
 function detectarSensores() {
     if (window.DeviceMotionEvent) {
