@@ -947,13 +947,13 @@ function configurarSimuladorPaso4(exp) {
     contenedor.innerHTML = "";
     document.getElementById("tabla-registros").innerHTML = `<tr><td colspan="4" style="text-align:center; color:#64748b;">Aún no has hecho ensayos. ¡Presiona los botones para registrar datos!</td></tr>`;
 
-    if (exp.simTipo === "fuerza" || exp.simTipo === "choque") {
+    } else if (exp.simTipo === "pendulo") {
         contenedor.innerHTML = `
             <div class="control-item">
-                <div class="control-header"><span>Fuerza / Impulso: <b id="val-ctrl1">35</b> N</span></div>
-                <input type="range" class="slider" min="5" max="100" value="35" oninput="actualizarSlider(1, this.value, ' N')">
+                <div class="control-header"><span>Amplitud / Apertura: <b id="val-ctrl1">45</b>°</span></div>
+                <input type="range" class="slider" min="15" max="85" value="45" oninput="actualizarSlider(1, this.value, '°')">
             </div>
-            <button class="btn btn-neon" onclick="ejecutarEnsayoSimulado('Impulso Aplicado')">⚡ Aplicar Fuerza y Medir</button>
+            <button class="btn btn-neon" onclick="ejecutarEnsayoSimulado('Medición de Péndulo')">⏱️ Registrar Lectura del Péndulo</button>
         `;
     } else if (exp.simTipo === "ph") {
         contenedor.innerHTML = `
@@ -1103,22 +1103,39 @@ function arrancarCanvas(canvasId, tipo, esDemo) {
             ctx.strokeRect(cx - 55, cy - 30, 110, 115);
 
         } else if (tipo === "pendulo") {
-            // === ANIMACIÓN CORREGIDA DEL PÉNDULO FÍSICO ===
             const cx = canvas.width / 2; // Centro horizontal
-            const cy = 30;               // Punto de pivote superior
-            const longitudCuerda = 120;  // Longitud de la cuerda
+            const cy = 30;               // Pivote superior
+            const longitudCuerda = 120;  // Longitud fija de la cuerda
             
-            // Ángulo oscilatorio basado en función seno (movimiento armónico simple)
-            const anguloMaximo = Math.PI / 4; // 45 grados de apertura
+            // Usamos simVars.param1 (convertida a radianes) para controlar la amplitud con el slider
+            const gradosAmplitud = simVars.param1 || 45;
+            const anguloMaximo = (gradosAmplitud * Math.PI) / 180;
             const angulo = anguloMaximo * Math.sin(t);
 
-            // Coordenadas cartesianas de la esfera del péndulo
+            // Coordenadas de la esfera
             const xEsfera = cx + longitudCuerda * Math.sin(angulo);
             const yEsfera = cy + longitudCuerda * Math.cos(angulo);
 
-            // Dibujar soporte / pivote superior
+            // Dibujar soporte superior
             ctx.fillStyle = "#94a3b8";
             ctx.fillRect(cx - 20, cy - 10, 40, 8);
+
+            // Dibujar la cuerda
+            ctx.strokeStyle = "#38bdf8";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(xEsfera, yEsfera);
+            ctx.stroke();
+
+            // Dibujar la esfera con efecto neón
+            ctx.fillStyle = "#a855f7";
+            ctx.shadowColor = "#a855f7";
+            ctx.shadowBlur = 15;
+            ctx.beginPath();
+            ctx.arc(xEsfera, yEsfera, 16, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
 
             // Dibujar la cuerda del péndulo
             ctx.strokeStyle = "#38bdf8";
