@@ -968,7 +968,6 @@ function configurarSimuladorPaso4(exp) {
 
             <button class="btn btn-neon" style="background:#10b981; color:#fff;" onclick="lanzarPruebaNewton()">▶ Aplicar Impulso y Medir</button>
         `;
-    }
     } else if (exp.simTipo === "ph") {
         contenedor.innerHTML = `
             <div class="btn-duo" style="margin-top:0;">
@@ -988,8 +987,7 @@ function configurarSimuladorPaso4(exp) {
             <button class="btn btn-neon" onclick="ejecutarEnsayoSimulado('Cierre de Interruptor')">💡 Medir Intensidad Lumínica</button>
         `;
     } else if (exp.simTipo === "pendulo") {
-        // === CONTROL ESPECÍFICO PARA EL PÉNDULO ===
-        simVars.param1 = 45; // Valor por defecto inicial en grados
+        simVars.param1 = 45; 
         contenedor.innerHTML = `
             <div class="control-item">
                 <div class="control-header"><span>Amplitud / Apertura: <b id="val-ctrl1">45</b>°</span></div>
@@ -1006,6 +1004,97 @@ function configurarSimuladorPaso4(exp) {
             <button class="btn btn-neon" onclick="ejecutarEnsayoSimulado('Medición Sensorial')">🚀 Registrar Lectura</button>
         `;
     }
+}
+
+function actualizarVarFuerza(val) {
+    simVars.fuerza = parseFloat(val);
+    const tag = document.getElementById("val-ctrl-fuerza");
+    if (tag) tag.innerText = val;
+}
+
+function actualizarVarMasa(val) {
+    simVars.masa = parseFloat(val);
+    const tag = document.getElementById("val-ctrl-masa");
+    if (tag) tag.innerText = parseFloat(val).toFixed(1);
+}
+
+function lanzarPruebaNewton() {
+    const fuerza = simVars.fuerza || 14;
+    const masa = simVars.masa || 2.0;
+    
+    const aceleracion = (fuerza / masa).toFixed(2);
+
+    simVars.impulsoActivo = true;
+    simVars.velocidadAcc = parseFloat(aceleracion);
+
+    registrarFilaTabla(
+        `F = ${fuerza} N, m = ${masa} kg`, 
+        `Aceleración = ${aceleracion} m/s²`, 
+        "Completado"
+    );
+}
+
+function actualizarSlider(num, val, unit) {
+    simVars.param1 = parseFloat(val);
+    const tag = document.getElementById(`val-ctrl${num}`);
+    if (tag) tag.innerText = val + unit;
+}
+
+function accionarReactivoPH(tipo) {
+    if (tipo === 'acido') {
+        simVars.param1 = Math.max(1.0, simVars.param1 - 1.2);
+    } else {
+        simVars.param1 = Math.min(14.0, simVars.param1 + 1.2);
+    }
+    const valTag = document.getElementById("val-ph-live");
+    if (valTag) valTag.innerText = simVars.param1.toFixed(2);
+
+    registrarFilaTabla(`Gotas de ${tipo.toUpperCase()}`, `pH = ${simVars.param1.toFixed(2)}`, simVars.param1 < 7 ? "Ácido" : simVars.param1 > 7 ? "Base" : "Neutro");
+}
+
+function ejecutarEnsayoSimulado(nombreAccion) {
+    let medicion = "";
+    let estado = "Normal";
+
+    if (expActual.simTipo === "fuerza") {
+        const acel = (simVars.param1 / 2.5).toFixed(2);
+        medicion = `Aceleración: ${acel} m/s²`;
+        estado = acel > 20 ? "Aceleración Alta" : "Aceleración Media";
+    } else if (expActual.simTipo === "circuito") {
+        const amperes = (simVars.param1 / 10).toFixed(2);
+        medicion = `Corriente: ${amperes} A`;
+        estado = amperes > 1.5 ? "Foco Muy Brillante" : "Brillo Normal";
+    } else {
+        medicion = `Respuesta = ${(simVars.param1 * 1.34).toFixed(1)} unidades`;
+        estado = "Registro Válido";
+    }
+
+    registrarFilaTabla(`${nombreAccion} (${simVars.param1})`, medicion, estado);
+}
+
+function registrarFilaTabla(control, resultado, estado) {
+    const tabla = document.getElementById("tabla-registros");
+    if (userSession.ensayos.length === 0) tabla.innerHTML = "";
+
+    const num = userSession.ensayos.length + 1;
+    userSession.ensayos.push({ num, control, resultado, estado });
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+        <td><b>#${num}</b></td>
+        <td>${control}</td>
+        <td style="color:var(--neon-blue); font-weight:600;">${resultado}</td>
+        <td><span class="pill">${estado}</span></td>
+    `;
+    tabla.appendChild(tr);
+}
+
+function detenerCanvasAnim() {
+    if (animId) {
+        cancelAnimationFrame(animId);
+        animId = null;
+    }
+}
 
 function actualizarVarFuerza(val) {
     simVars.fuerza = parseFloat(val);
