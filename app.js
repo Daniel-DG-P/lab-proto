@@ -1065,6 +1065,7 @@ function arrancarCanvas(canvasId, tipo, esDemo) {
 
     let xPos = 40;
     let t = 0;
+    let velocidadActual = 0;
 
     function render() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1081,13 +1082,21 @@ function arrancarCanvas(canvasId, tipo, esDemo) {
             if (esDemo) {
                 xPos = 120 + Math.sin(t * 2) * 80;
             } else {
-                // Vinculamos la velocidad directamente a los Newtons del slider (simVars.param1)
+                // Definimos un umbral de fricción estática (ej. 25 N)
+                const fuerzaFriccion = 25;
                 const fuerzaActual = simVars.param1 !== undefined ? simVars.param1 : 35;
-                const velocidad = fuerzaActual * 0.12;
 
-                xPos += velocidad;
+                if (fuerzaActual <= fuerzaFriccion) {
+                    // Si la fuerza es menor o igual a la fricción, el carro SE QUEDA ESTÁTICO
+                    velocidadActual = 0;
+                } else {
+                    // Si supera la fricción, acelera proporcionalmente a la fuerza restante
+                    velocidadActual = (fuerzaActual - fuerzaFriccion) * 0.1;
+                }
+
+                xPos += velocidadActual;
                 if (xPos > canvas.width - 70) {
-                    xPos = 40; // Reinicia la posición al llegar al final para la prueba visual
+                    xPos = 40; // Reinicia al llegar al final
                 }
 
                 if (sensorActivo) {
@@ -1095,6 +1104,7 @@ function arrancarCanvas(canvasId, tipo, esDemo) {
                 }
             }
 
+            // Dibujar el carro
             ctx.fillStyle = "#00e5ff";
             ctx.shadowColor = "#00e5ff";
             ctx.shadowBlur = 10;
